@@ -2,8 +2,8 @@
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import LetterGlitch from '@/components/LetterGlitch';
-import { signIn } from '@/lib/auth-client';
-
+import { authClient } from '@/lib/auth-client';
+import Cookies from "js-cookie"
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
@@ -17,7 +17,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const { data, error } = await signIn.email({
+      const { data, error } = await authClient.signIn.email({
         email,
         password,
       });
@@ -29,6 +29,7 @@ export default function LoginPage() {
       }
 
       if (data) {
+        Cookies.set("email",email);
         router.push('/dashboard');
       }
     } catch (err) {

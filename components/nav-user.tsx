@@ -7,7 +7,7 @@ import {
   IconNotification,
   IconUserCircle,
 } from "@tabler/icons-react"
-
+import React from "react"
 import {
   Avatar,
   AvatarFallback,
@@ -28,18 +28,28 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-
+import Cookies from 'js-cookie';  
 export function NavUser({
   user,
 }: {
   user: {
-    name: string
-    email: string
-    avatar: string
+    id: string,
+    name: string,
+    email: string,
+    image: string | null,
+    createdAt: Date,
+    updatedAt: Date,
+    emailVerified: boolean,
   }
 }) {
   const { isMobile } = useSidebar()
-
+  const[email,setEmail]=React.useState("");
+  React.useEffect(()=>{
+    const storedEmail=Cookies.get("email");
+    if(storedEmail){
+      setEmail(storedEmail);
+    }
+  },[]);
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -71,34 +81,18 @@ export function NavUser({
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                  <AvatarImage src={user.image || ""} alt={user.name} />
+                  <AvatarFallback className="rounded-lg">AB</AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">{user.name}</span>
                   <span className="text-muted-foreground truncate text-xs">
-                    {user.email}
+                    {email}
                   </span>
                 </div>
               </div>
             </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <IconUserCircle />
-                Account
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <IconCreditCard />
-                Billing
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <IconNotification />
-                Notifications
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={()=>{Cookies.remove("papersession")}}>
               <IconLogout />
               Log out
             </DropdownMenuItem>

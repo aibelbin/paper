@@ -1,8 +1,50 @@
-"use client"
+"use client";
 import React from 'react'
 import LetterGlitch from '@/components/LetterGlitch';
-
+import { authClient } from '@/lib/auth-client';
+import { useRouter } from 'next/navigation';
+import Cookies from "js-cookie";
 export default function page() {
+    const [name, setName] = React.useState('');
+    const [email, setEmail] = React.useState('');
+    const [password, setPassword] = React.useState('');
+    const [confirmPassword, setConfirmPassword] = React.useState('');
+    const [error, setError] = React.useState('');
+    const [loading, setLoading] = React.useState(false);
+    const router = useRouter();
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      setError('');
+      
+      if (password !== confirmPassword) {
+        setError('Passwords do not match');
+        return;
+      }
+      
+      setLoading(true);
+      
+      try {
+          const { data, error } = await authClient.signUp.email({
+            name,
+            email,
+            password,
+          });
+    
+          if (error) {
+            setError(error.message || 'Invalid email or password');
+            setLoading(false);
+            return;
+          }
+    
+          if (data) {
+            Cookies.set("email",email);
+            router.push('/');
+          }
+        } catch (err) {
+          setError('An unexpected error occurred. Please try again.');
+          setLoading(false);
+        }
+  }
   return (
     <div className="relative min-h-screen w-full">
       <div className="absolute inset-0 z-0">
@@ -21,7 +63,13 @@ export default function page() {
             <p className="text-sm sm:text-base text-white/70">Create your account</p>
           </div>
 
-          <form className="space-y-4 sm:space-y-5">
+          {error && (
+            <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-sm">
+              {error}
+            </div>
+          )}
+
+          <form className="space-y-4 sm:space-y-5" onSubmit={handleSubmit}>
             <div>
               <label htmlFor="fullName" className="block text-sm font-medium text-white/90 mb-2">
                 Full Name
@@ -30,6 +78,8 @@ export default function page() {
                 type="text"
                 id="fullName"
                 name="fullName"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 placeholder="Abin Thomas"
                 className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
                 required
@@ -43,6 +93,8 @@ export default function page() {
                 type="email"
                 id="email"
                 name="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="email@gmail.com"
                 className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
                 required
@@ -58,6 +110,8 @@ export default function page() {
                 type="password"
                 id="password"
                 name="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
                 required
@@ -71,19 +125,20 @@ export default function page() {
                 type="password"
                 id="confirmPassword"
                 name="confirmPassword"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="••••••••"
                 className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
                 required
               />
             </div>
 
-           
-
             <button
               type="submit"
-              className="w-full py-3 px-4 bg-gradient-to-r from-green-600 to-green-600 hover:from-green-700 hover:to-green-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200"
+              disabled={loading}
+              className="w-full py-3 px-4 bg-gradient-to-r from-green-600 to-green-600 hover:from-green-700 hover:to-green-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Create Account
+              {loading ? 'Creating Account...' : 'Create Account'}
             </button>
           </form>
 
