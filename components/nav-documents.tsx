@@ -37,15 +37,15 @@ export function NavDocuments({
   const { isMobile } = useSidebar()
 
   return (
-    <SidebarGroup className="group-data-[collapsible=icon]:hidden">
+    <SidebarGroup className="group-data-[collapsible=icon]:hidden absolute bottom-20">
       <SidebarGroupLabel>Documents</SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) => (
           <SidebarMenuItem key={item.name}>
             <SidebarMenuButton asChild>
               <a href={item.url}>
-                <item.icon />
-                <span>{item.name}</span>
+                <item.icon className="!w-6 !h-6"/>
+                <span className="text-2xl">{item.name}</span>
               </a>
             </SidebarMenuButton>
             <DropdownMenu>
