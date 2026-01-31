@@ -19,7 +19,6 @@ import {
   IconUsers,
 } from "@tabler/icons-react"
 import { Server, ShieldAlert, NotebookText } from "lucide-react"
-import { NavDocuments } from "@/components/nav-documents"
 import { NavMain } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
 import {
@@ -43,7 +42,7 @@ const routes = {
 
     {
       title: "Alerts",
-      url: "#",
+      url: "/dashboard/alerts",
       icon: ShieldAlert,
     },
     {
@@ -55,6 +54,21 @@ const routes = {
       title: "Context",
       url: "/dashboard/context",
       icon: IconListDetails,
+    },
+    {
+      title: "Smart Analytics",
+      url: "/dashboard/SmartAnalytics",
+      icon: IconChartBar,
+    },
+    {
+      title: "Agent",
+      url: "/dashboard/agent",
+      icon: IconUsers,
+    },  
+    {
+      title: "Reports",
+      url: "/dashboard/reports",
+      icon: IconReport,
     }
   ],
   navClouds: [
@@ -66,7 +80,7 @@ const routes = {
       items: [
         {
           title: "Active Proposals",
-          url: "#",
+          url: "#",IconFolder
         },
         {
           title: "Archived",
@@ -142,8 +156,8 @@ const {
               className="data-[slot=sidebar-menu-button]:!p-1.5 "
             >
               <a href="#">
-                <NotebookText />   
-          <span className="text-base font-semibold">Paper </span>
+                <NotebookText className="!h-7 !w-7" size={40} />   
+          <span className="text-3xl font-bold">Paper </span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -151,7 +165,6 @@ const {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={routes.navMain} />
-        <NavDocuments items={routes.documents} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={session.user} />

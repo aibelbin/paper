@@ -22,7 +22,7 @@ export function NavMain({
 }) {
   return (
     <SidebarGroup>
-      <SidebarGroupContent className="flex flex-col  gap-2">
+      <SidebarGroupContent className="flex flex-col mt-5 gap-2">
         <SidebarMenu>
          
         </SidebarMenu>
