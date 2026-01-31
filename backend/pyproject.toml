@@ -19,4 +19,6 @@ dependencies = [
     "groq>=0.4.0",
     "reportlab>=4.0.0",
     "psycopg2-binary>=2.9.0",
+    "gvm-tools>=25.4.5",
+    "lxml>=6.0.2",
 ]

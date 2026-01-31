@@ -49,7 +49,9 @@ dependencies = [
     { name = "boto3" },
     { name = "fastapi" },
     { name = "groq" },
+    { name = "gvm-tools" },
     { name = "httpx" },
+    { name = "lxml" },
     { name = "mcp" },
     { name = "numpy" },
     { name = "psycopg2-binary" },
@@ -67,7 +69,9 @@ requires-dist = [
     { name = "boto3", specifier = ">=1.42.39" },
     { name = "fastapi", specifier = ">=0.109.0" },
     { name = "groq", specifier = ">=0.4.0" },
+    { name = "gvm-tools", specifier = ">=25.4.5" },
     { name = "httpx", specifier = ">=0.27.0" },
+    { name = "lxml", specifier = ">=6.0.2" },
     { name = "mcp", specifier = ">=1.0.0" },
     { name = "numpy", specifier = ">=1.26.0" },
     { name = "psycopg2-binary", specifier = ">=2.9.0" },
@@ -412,6 +416,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/3f/12/f4099a141677fcd2ed79dcc1fcec431e60c52e0e90c9c5d935f0ffaf8c0e/groq-1.0.0.tar.gz", hash = "sha256:66cb7bb729e6eb644daac7ce8efe945e99e4eb33657f733ee6f13059ef0c25a9", size = 146068, upload-time = "2025-12-17T23:34:23.115Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/4a/88/3175759d2ef30406ea721f4d837bfa1ba4339fde3b81ba8c5640a96ed231/groq-1.0.0-py3-none-any.whl", hash = "sha256:6e22bf92ffad988f01d2d4df7729add66b8fd5dbfb2154b5bbf3af245b72c731", size = 138292, upload-time = "2025-12-17T23:34:21.957Z" },
+]
+
+[[package]]
+name = "gvm-tools"
+version = "25.4.5"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "python-gvm" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/99/a2/e4bbb0e66d944efde7278f80b49b7cb96521b1fe1f260500466b37f69327/gvm_tools-25.4.5.tar.gz", hash = "sha256:95ea268ed7c10727e3e1e339c0c1d16a67fa01573c01345e9b3710122ae3da48", size = 139778, upload-time = "2026-01-22T15:07:17.565Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/68/c5/7e327ff0312843e56adfda8883ca3c279f814e7e501812fa1a14b79cb640/gvm_tools-25.4.5-py3-none-any.whl", hash = "sha256:16ff798269dc4ded21237da5a84d6024f26e24f56f3641ffe164ca068204babf", size = 29958, upload-time = "2026-01-22T15:07:16.213Z" },
 ]
 
 [[package]]
