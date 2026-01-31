@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { trpc } from '@/lib/trpc';
+import { trpc } from '@/trpc/client';
 import { Vulnerability } from '@/types/vulnerability';
 
 function SeverityBadge({ severity }: { severity: string }) {

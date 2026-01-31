@@ -5,7 +5,7 @@ import { analyticsRouter } from "./analytics";
 import { chatRouter } from "./chat";
 import { contextRouter } from "./context";
 import { vulnerabilityRouter } from './vulnerability';
-
+import { alertRouter } from "./alert";
 export const appRouter = createTRPCRouter({
   test: publicProcedure.query(async (opts) => {
     return {
@@ -16,7 +16,8 @@ export const appRouter = createTRPCRouter({
   analytics: analyticsRouter,
   chat: chatRouter,
   context: contextRouter,
-  vulnerability: vulnerabilityRouter
+  vulnerability: vulnerabilityRouter,
+  alert: alertRouter,
 });
 
 export type AppRouter = typeof appRouter;
