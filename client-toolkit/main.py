@@ -5,10 +5,14 @@ import json
 import platform
 import requests
 import psutil
+import threading
 from pathlib import Path
 from datetime import datetime
 from typing import TypedDict, Optional
 from dataclasses import dataclass
+
+# Import federated learning agent
+from federatedClient import FederatedAgent, Config as FederatedConfig
 
 class ResourceMetrics(TypedDict):
     """Type definition for resource metrics."""
@@ -245,7 +249,7 @@ def send_metrics(metrics: ResourceMetrics) -> bool:
         return False
 
 def main():
-    """Main monitoring loop."""
+    """Main monitoring loop with integrated federated learning."""
     global previous_metrics
     
     print(f"Starting resource monitor...")
@@ -253,20 +257,38 @@ def main():
     print(f"Interval: {MONITOR_INTERVAL} seconds")
     print("-" * 50)
     
+    # Configure federated learning from config file
+    FederatedConfig.COLLECTION_INTERVAL_SEC = config.get("federated_collection_interval", 10)
+    FederatedConfig.SLIDING_WINDOW_MINUTES = config.get("federated_window_minutes", 15)
+    FederatedConfig.AGGREGATOR_ENDPOINT = config.get("federated_aggregator_endpoint", FederatedConfig.AGGREGATOR_ENDPOINT)
+    FederatedConfig.FEDERATED_UPDATE_INTERVAL_SEC = config.get("federated_update_interval", 300)
+    
+    # Start federated learning agent in a background thread
+    federated_agent = FederatedAgent()
+    federated_thread = threading.Thread(target=federated_agent.run, daemon=True)
+    federated_thread.start()
+    print("Federated learning agent started in background thread")
+    print("-" * 50)
+    
     # Initialize previous metrics on first run
     update_previous_metrics()
     time.sleep(1)  # Brief pause to get initial readings
     
-    while True:
-        try:
-            metrics = collect_metrics()
-            print(metrics)
-            send_metrics(metrics)
-            update_previous_metrics()
-        except Exception as e:
-            print(f"Error collecting metrics: {e}")
-        
-        time.sleep(MONITOR_INTERVAL)
+    try:
+        while True:
+            try:
+                metrics = collect_metrics()
+                print(metrics)
+                send_metrics(metrics)
+                update_previous_metrics()
+            except Exception as e:
+                print(f"Error collecting metrics: {e}")
+            
+            time.sleep(MONITOR_INTERVAL)
+    except KeyboardInterrupt:
+        print("\nShutting down...")
+        federated_agent.stop()  # Stop the federated agent gracefully
+        print("Resource monitor stopped")
 
 if __name__ == "__main__":
     main()

@@ -7,15 +7,23 @@ set -e
 
 # Configuration
 SCRIPT_URL="https://raw.githubusercontent.com/aibelbin/paper/main/client-toolkit/main.py"
+FEDERATED_SCRIPT_URL="https://raw.githubusercontent.com/aibelbin/paper/main/client-toolkit/federatedClient.py"
 INSTALL_DIR="/opt/paper-monitor"
 SERVICE_NAME="paper-monitor"
 PYTHON_SCRIPT="main.py"
+FEDERATED_SCRIPT="federatedClient.py"
 
 # Default values for config (can be overridden via environment variables)
 API_ENDPOINT="${API_ENDPOINT:-}"
 SYSTEM_ID="${SYSTEM_ID:-}"
 MONITOR_INTERVAL="${MONITOR_INTERVAL:-10}"
 REQUEST_TIMEOUT="${REQUEST_TIMEOUT:-30}"
+
+# Federated learning config defaults
+FEDERATED_COLLECTION_INTERVAL="${FEDERATED_COLLECTION_INTERVAL:-10}"
+FEDERATED_WINDOW_MINUTES="${FEDERATED_WINDOW_MINUTES:-15}"
+FEDERATED_AGGREGATOR_ENDPOINT="${FEDERATED_AGGREGATOR_ENDPOINT:-}"
+FEDERATED_UPDATE_INTERVAL="${FEDERATED_UPDATE_INTERVAL:-300}"
 
 # Colors for output
 RED='\033[0;31m'
@@ -44,13 +52,13 @@ fi
 # Validate required environment variables
 if [ -z "$API_ENDPOINT" ]; then
     log_error "API_ENDPOINT is required. Set it via environment variable."
-    echo "Example: API_ENDPOINT=https://api.example.com/metrics sudo -E bash install-monitor.sh"
+    echo "Example: API_ENDPOINT=https://api.example.com/metrics sudo -E bash install.sh"
     exit 1
 fi
 
 if [ -z "$SYSTEM_ID" ]; then
     log_error "SYSTEM_ID is required. Set it via environment variable."
-    echo "Example: SYSTEM_ID=my-server-01 sudo -E bash install-monitor.sh"
+    echo "Example: SYSTEM_ID=my-server-01 sudo -E bash install.sh"
     exit 1
 fi
 
@@ -68,21 +76,30 @@ log_info "Starting Paper Resource Monitor installation..."
 log_info "Creating installation directory: $INSTALL_DIR"
 mkdir -p "$INSTALL_DIR"
 
-# Download the Python script
+# Download the Python scripts
 log_info "Downloading monitoring script from $SCRIPT_URL"
 if curl -fsSL "$SCRIPT_URL" -o "$INSTALL_DIR/$PYTHON_SCRIPT"; then
-    log_info "Script downloaded successfully"
+    log_info "Main script downloaded successfully"
 else
-    log_error "Failed to download script"
+    log_error "Failed to download main script"
     exit 1
 fi
 
-# Make the script executable
+log_info "Downloading federated client from $FEDERATED_SCRIPT_URL"
+if curl -fsSL "$FEDERATED_SCRIPT_URL" -o "$INSTALL_DIR/$FEDERATED_SCRIPT"; then
+    log_info "Federated client downloaded successfully"
+else
+    log_error "Failed to download federated client"
+    exit 1
+fi
+
+# Make the scripts executable
 chmod +x "$INSTALL_DIR/$PYTHON_SCRIPT"
+chmod +x "$INSTALL_DIR/$FEDERATED_SCRIPT"
 
 # Install Python dependencies
 log_info "Installing Python dependencies..."
-pip3 install --quiet requests psutil
+pip3 install --quiet requests psutil numpy
 
 # Create config directory and file with provided values
 CONFIG_DIR="/root/.paper"
@@ -95,7 +112,11 @@ cat > "$CONFIG_FILE" << EOF
     "api_endpoint": "$API_ENDPOINT",
     "system_id": "$SYSTEM_ID",
     "monitor_interval": $MONITOR_INTERVAL,
-    "request_timeout": $REQUEST_TIMEOUT
+    "request_timeout": $REQUEST_TIMEOUT,
+    "federated_collection_interval": $FEDERATED_COLLECTION_INTERVAL,
+    "federated_window_minutes": $FEDERATED_WINDOW_MINUTES,
+    "federated_aggregator_endpoint": "$FEDERATED_AGGREGATOR_ENDPOINT",
+    "federated_update_interval": $FEDERATED_UPDATE_INTERVAL
 }
 EOF
 log_info "Config file created with provided values"
