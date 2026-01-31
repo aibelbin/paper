@@ -21,10 +21,10 @@ export const appRouter = createTRPCRouter({
   chat: chatRouter,
   context: contextRouter,
   alert: alertRouter,
-  twilio: twilioRouter,
-  system: systemRouter,
   host: hostRouter,
   vulnerability: vulnerabilityRouter
+  twilio: twilioRouter,
+  system: systemRouter,
 });
 
 export type AppRouter = typeof appRouter;
