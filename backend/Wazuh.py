@@ -196,17 +196,17 @@ class WazuhSDK:
         Get vulnerabilities for a specific agent from Wazuh Indexer
         """
         data = {
-            # "query": {
-            #     "match": {
-            #         "agent.id": agent_id
-            #     }
-            # },
             "query": {
-                "bool": {
-                    "must": [{ "match": { "agent.id": agent_id } }],
-                    "filter": [{ "terms": { "vulnerability.severity": severity_filter or [] } }]
+                "match": {
+                    "agent.id": agent_id
                 }
             },
+            # "query": {
+            #     "bool": {
+            #         "must": [{ "match": { "agent.id": agent_id } }],
+            #         "filter": [{ "terms": { "vulnerability.severity": severity_filter or [] } }]
+            #     }
+            # },
             "sort": [
                 { "vulnerability.score.base": { "order": "desc" } }
             ],
@@ -238,8 +238,8 @@ class WazuhSDK:
             if len(all_vulnerabilities) >= total or len(items) == 0:
                 break
             
-            if offset >= 100:
-                break
+            # if offset >= 100:
+            #     break
             offset += limit
 
         return all_vulnerabilities
