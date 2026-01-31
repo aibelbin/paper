@@ -1,4 +1,5 @@
 import os
+import json
 import uuid
 import io
 from datetime import datetime
@@ -171,15 +172,13 @@ async def receive_metrics(payload: TelemetryPayload):
             "system_id": payload.system_id,
             "hostname": payload.hostname,
             "system": payload.system,
-            "cpu": payload.cpu.model_dump(),
-            "memory": payload.memory.model_dump(),
-            "disk": payload.disk.model_dump(),
-            "network": payload.network.model_dump(),
+            "cpu": json.dumps(payload.cpu.model_dump()),
+            "memory": json.dumps(payload.memory.model_dump()),
+            "disk": json.dumps(payload.disk.model_dump()),
+            "network": json.dumps(payload.network.model_dump()),
         }
-        
-        result = supabase.table("system_telemetry").insert(telemetry_record).execute()
-        print("Metrics stored successfully", result)
-        
+        supabase.table("system_telemetry").insert(telemetry_record).execute()
+
         return {
             "status": "success",
             "message": "Metrics stored successfully",

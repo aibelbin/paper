@@ -104,14 +104,17 @@ function VulnerabilityModal({ vuln, onClose }: { vuln: Vulnerability; onClose: (
 
               <div>
                 <label className="text-green-500 text-xs uppercase tracking-wide">Reference</label>
-                <a
-                  href={vuln.reference}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-green-400 hover:text-green-300 mt-1 block break-all"
-                >
-                  {vuln.reference}
-                </a>
+                {vuln.reference.split(",").map((ref) => (
+                  <a
+                    key={ref}
+                    href={ref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-green-400 hover:text-green-300 mt-1 block break-all"
+                  >
+                    {ref.trim()}
+                  </a>
+                ))}
               </div>
             </div>
           </div>
