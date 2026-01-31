@@ -6,6 +6,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from supabase import create_client, Client
+from Wazuh import WazuhSDK
 
 # Import federated learning components
 from federatedServer import (
@@ -37,10 +38,18 @@ app.add_middleware(
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
-if not SUPABASE_URL or not SUPABASE_KEY:
-    raise ValueError("SUPABASE_URL and SUPABASE_KEY environment variables are required")
+# if not SUPABASE_URL or not SUPABASE_KEY:
+#     raise ValueError("SUPABASE_URL and SUPABASE_KEY environment variables are required")
 
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+# supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+wazuh = WazuhSDK(
+    host="143.110.250.168",
+    api_username="wazuh",
+    api_password="XF59yHeRxf.CPK..G1yVHMhm6ZPeAtUA",
+    indexer_username="admin",
+    indexer_password="Peper-123900",
+)
 
 # Initialize federated learning components
 registry = NodeRegistry()
@@ -348,6 +357,10 @@ async def get_cluster_stats():
         outlier_count=len(outliers)
     )
 
+@app.get("/get/vulnerabilities")
+async def get_vulnerabilities():
+    vulnerabilities = wazuh.get_all_vulnerabilities(severity_filter=["Critical", "High", "Medium", "Low"])
+    return vulnerabilities
 
 if __name__ == "__main__":
     import uvicorn
