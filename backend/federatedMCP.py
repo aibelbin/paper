@@ -412,15 +412,23 @@ def create_sse_app():
     sse = SseServerTransport("/messages")
     
     async def handle_sse(request):
+        """Handle SSE connection - this is a streaming endpoint."""
         async with sse.connect_sse(
             request.scope, request.receive, request._send
         ) as streams:
             await server.run(
                 streams[0], streams[1], server.create_initialization_options()
             )
+        # Return an empty response since SSE already handled the connection
+        from starlette.responses import Response
+        return Response(status_code=200)
     
     async def handle_messages(request):
+        """Handle POST messages to the SSE session."""
         await sse.handle_post_message(request.scope, request.receive, request._send)
+        # Return an empty response since the transport handles it
+        from starlette.responses import Response
+        return Response(status_code=202)
     
     async def health(request):
         return JSONResponse({"status": "ok", "server": "federated-mcp"})
@@ -428,10 +436,11 @@ def create_sse_app():
     return Starlette(
         routes=[
             Route("/health", health),
-            Route("/sse", handle_sse),
-            Route("/messages", handle_messages, methods=["POST"]),
+            Route("/sse", endpoint=handle_sse),
+            Route("/messages", endpoint=handle_messages, methods=["POST"]),
         ]
     )
+
 
 
 def main():
