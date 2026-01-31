@@ -656,7 +656,6 @@ async def generate_report(request: ReportRequest):
         print(f"Error generating report: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to generate report: {str(e)}")
 
-
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
