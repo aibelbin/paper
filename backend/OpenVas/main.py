@@ -4,13 +4,10 @@ from pydantic import BaseModel
 from gvm.connections import TLSConnection
 from gvm.protocols.gmp import Gmp
 
-# ---------------- CONFIG ----------------
 GMP_HOST = "143.110.250.168"
 GMP_PORT = 9390
 GMP_USER = "admin"
-GMP_PASS = "aa2660b4-34ef-4d46-b3e1-de8935d4b47e"  # change this
-
-# ---------------------------------------
+GMP_PASS = "-34ef-4d46-b3e1-de8935d4b47e" 
 
 app = FastAPI(title="OpenVAS API")
 
@@ -24,7 +21,7 @@ def get_gmp():
     connection = TLSConnection(
         hostname=GMP_HOST,
         port=GMP_PORT,
-        tls_verify=False  # Arch uses self-signed certs
+        tls_verify=False  
     )
     gmp = Gmp(connection)
     gmp.authenticate(GMP_USER, GMP_PASS)
@@ -51,7 +48,6 @@ def create_scan(payload: OpenVasScanRequest):
             if c.findtext("name") == "Full and fast"
         )
 
-        # 3. Create task
         task = gmp.create_task(
             name=payload.name,
             target_id=target_id,
@@ -59,7 +55,6 @@ def create_scan(payload: OpenVasScanRequest):
         )
         task_id = task.get("id")
 
-        # 4. Start task
         gmp.start_task(task_id)
         gmp.disconnect()
 
