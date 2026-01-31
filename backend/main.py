@@ -1,4 +1,5 @@
 import os
+import json
 import uuid
 import io
 from datetime import datetime
@@ -50,10 +51,10 @@ app.add_middleware(
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
-# if not SUPABASE_URL or not SUPABASE_KEY:
-#     raise ValueError("SUPABASE_URL and SUPABASE_KEY environment variables are required")
+if not SUPABASE_URL or not SUPABASE_KEY:
+    raise ValueError("SUPABASE_URL and SUPABASE_KEY environment variables are required")
 
-# supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 wazuh = WazuhSDK(
     host="143.110.250.168",
@@ -171,15 +172,13 @@ async def receive_metrics(payload: TelemetryPayload):
             "system_id": payload.system_id,
             "hostname": payload.hostname,
             "system": payload.system,
-            "cpu": payload.cpu.model_dump(),
-            "memory": payload.memory.model_dump(),
-            "disk": payload.disk.model_dump(),
-            "network": payload.network.model_dump(),
+            "cpu": json.dumps(payload.cpu.model_dump()),
+            "memory": json.dumps(payload.memory.model_dump()),
+            "disk": json.dumps(payload.disk.model_dump()),
+            "network": json.dumps(payload.network.model_dump()),
         }
-        
-        result = supabase.table("system_telemetry").insert(telemetry_record).execute()
-        print("Metrics stored successfully", result)
-        
+        supabase.table("system_telemetry").insert(telemetry_record).execute()
+
         return {
             "status": "success",
             "message": "Metrics stored successfully",
@@ -655,6 +654,25 @@ async def generate_report(request: ReportRequest):
     except Exception as e:
         print(f"Error generating report: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to generate report: {str(e)}")
+
+@app.get("/host/add")
+async def add_host(system_id: str, ip_address: str):
+    try:
+        data = {
+            "status": "online",
+            "ip_address": ip_address,
+        }
+        result = supabase.table("systems").update(data).eq("id", system_id).execute()
+        if not result.data:
+            raise HTTPException(status_code=404, detail="System not found")
+            
+        return {"status": "success", "system_id": system_id}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error adding host: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to add host: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn

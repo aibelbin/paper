@@ -8,6 +8,7 @@ import { vulnerabilityRouter } from './vulnerability';
 import { alertRouter } from "./alert";
 import { twilioRouter } from "./twilio.router";
 import { systemRouter } from "./system.router";
+import { hostRouter } from "./host";
 
 export const appRouter = createTRPCRouter({
   test: publicProcedure.query(async (opts) => {
@@ -19,10 +20,11 @@ export const appRouter = createTRPCRouter({
   analytics: analyticsRouter,
   chat: chatRouter,
   context: contextRouter,
-  vulnerability: vulnerabilityRouter,
   alert: alertRouter,
   twilio: twilioRouter,
   system: systemRouter,
+  host: hostRouter,
+  vulnerability: vulnerabilityRouter
 });
 
 export type AppRouter = typeof appRouter;
