@@ -2,6 +2,8 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { trpc } from "@/trpc/client";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface Message {
   id: string;
@@ -72,11 +74,10 @@ export function AIChatWidget() {
     <>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg shadow-emerald-500/20 ${
-          isOpen
-            ? "bg-gray-800 text-gray-400 hover:bg-gray-700 border border-gray-700"
-            : "bg-emerald-500 text-black hover:bg-emerald-400"
-        }`}
+        className={`fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg shadow-emerald-500/20 ${isOpen
+          ? "bg-gray-800 text-gray-400 hover:bg-gray-700 border border-gray-700"
+          : "bg-emerald-500 text-black hover:bg-emerald-400"
+          }`}
       >
         {isOpen ? (
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -90,7 +91,7 @@ export function AIChatWidget() {
       </button>
 
       {isOpen && (
-        <div className="fixed bottom-24 right-6 z-50 w-80 sm:w-96 h-\[500px\] bg-gray-900 rounded-2xl border border-gray-700 shadow-2xl shadow-black/50 flex flex-col overflow-hidden">
+        <div className="fixed bottom-24 right-6 z-50 w-80 sm:w-96 h-[80%] bg-gray-900 rounded-2xl border border-gray-700 shadow-2xl shadow-black/50 flex flex-col overflow-hidden">
           <div className="p-4 border-b border-gray-800 bg-linear-to-r from-gray-900 to-gray-800">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center">
@@ -112,13 +113,14 @@ export function AIChatWidget() {
                 className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`max-w-[80%] p-3 rounded-2xl ${
-                    message.role === "user"
-                      ? "bg-emerald-500 text-black rounded-br-md"
-                      : "bg-gray-800 text-white rounded-bl-md border border-gray-700"
-                  }`}
+                  className={`max-w-[80%] p-3 rounded-2xl ${message.role === "user"
+                    ? "bg-emerald-500 text-black rounded-br-md"
+                    : "bg-gray-800 text-white rounded-bl-md border border-gray-700"
+                    }`}
                 >
-                  <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                  <div className="text-sm prose prose-invert max-w-none">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
+                  </div>
                   <p className={`text-xs mt-1 ${message.role === "user" ? "text-emerald-900" : "text-gray-500"}`}>
                     {message.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                   </p>

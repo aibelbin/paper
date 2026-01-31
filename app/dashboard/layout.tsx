@@ -5,7 +5,7 @@ import {
   SidebarProvider,
 } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
-import { AIChatWidget } from "./components/AIChatWidget";
+import { AIChatWidget } from "./components/ai-chat-widget";
 
 function layout({
   children,
