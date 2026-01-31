@@ -64,7 +64,7 @@ class Config:
     PORT: int = 8080
     
     # Node management
-    NODE_TIMEOUT_SEC: int = 600          # Mark node as stale after 10 min
+    NODE_TIMEOUT_SEC: int = 120           # Mark node as stale after 2 min
     MAX_HISTORY_PER_NODE: int = 100      # Keep last N embeddings per node
     
     # Anomaly detection
@@ -232,6 +232,18 @@ class NodeRegistry:
             {'weights': n.weights, 'num_samples': n.num_samples}
             for n in nodes if n.weights
         ]
+
+    def prune_stale_nodes(self, timeout: int = Config.NODE_TIMEOUT_SEC) -> List[str]:
+        """Remove nodes that haven't been seen for longer than timeout."""
+        now = time.time()
+        stale_ids = []
+        for client_id, node in list(self.nodes.items()):
+            if (now - node.last_seen) > timeout:
+                stale_ids.append(client_id)
+                del self.nodes[client_id]
+        if stale_ids:
+            logger.info(f"Pruned stale nodes: {stale_ids}")
+        return stale_ids
 
 
 # =============================================================================

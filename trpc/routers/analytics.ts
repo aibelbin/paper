@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 
 const BASE_URL = 'http://143.110.250.168:8000';
-
+// http://143.110.250.168:8000/nodes/0ad1aa9544441886/anomaly
 async function fetchWithTimeout(url: string, timeout = 10000) {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);
@@ -42,7 +42,6 @@ export const analyticsRouter = createTRPCRouter({
     .query(async ({ input }) => {
       try {
         const data = await fetchWithTimeout(`${BASE_URL}/nodes/${input.clientId}`);
-        console.log('Fetched node data:', data);
         return data;
       } catch (error) {
         console.error('Error fetching node:', error);

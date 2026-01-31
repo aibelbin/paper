@@ -37,11 +37,25 @@ const routes = {
       url: "/dashboard/overview",
       icon: IconDashboard,
     },
-
+    {
+      title: "Realtime Vuln",
+      url: "/dashboard/vunlnerabilty",
+      icon: IconSearch,
+    },
+    {
+      title: "Smart Analytics",
+      url: "/dashboard/SmartAnalytics",
+      icon: IconChartBar,
+    },
     {
       title: "Alerts",
       url: "/dashboard/alerts",
       icon: IconShieldExclamation,
+    },
+    {
+      title: "Agent",
+      url: "/dashboard/agent",
+      icon: IconUsers,
     },
     {
       title: "Systems",
@@ -54,25 +68,10 @@ const routes = {
       icon: IconListDetails,
     },
     {
-      title: "Smart Analytics",
-      url: "/dashboard/SmartAnalytics",
-      icon: IconChartBar,
-    },
-    {
-      title: "Agent",
-      url: "/dashboard/agent",
-      icon: IconUsers,
-    },
-    {
       title: "Reports",
       url: "/dashboard/reports",
       icon: IconReport,
     },
-    {
-      title: "Realtime Vuln",
-      url: "/dashboard/vunlnerabilty",
-      icon: IconSearch,
-    }
   ],
   navClouds: [
     {

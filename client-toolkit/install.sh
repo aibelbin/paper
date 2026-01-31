@@ -78,7 +78,7 @@ log_info "Starting Paper Resource Monitor installation..."
 if ! command -v uv &> /dev/null; then
     log_info "uv not found. Installing..."
     curl -LsSf https://astral.sh/uv/install.sh | sh
-    source $HOME/.cargo/env
+    source $HOME/.local/bin/env
 else
     log_info "uv is already installed"
 fi

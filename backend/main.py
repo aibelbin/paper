@@ -47,6 +47,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.on_event("startup")
+async def startup_event():
+    import asyncio
+    asyncio.create_task(periodic_prune())
+
+async def periodic_prune():
+    while True:
+        try:
+            import asyncio
+            registry.prune_stale_nodes()
+            await asyncio.sleep(10) # check every 10 seconds
+        except Exception as e:
+            print(f"Error in periodic prune: {e}")
+            await asyncio.sleep(10)
+
+
 # Supabase client
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
@@ -295,6 +312,105 @@ async def get_node_history(client_id: str):
     }
 
 
+@app.get("/nodes/{client_id}/anomaly")
+async def get_node_anomaly(client_id: str):
+    """
+    Detect if a node is behaving anomalously compared to its own history.
+    Works with just ONE node - no need for multiple nodes.
+    """
+    node = registry.get_node(client_id)
+    if not node:
+        raise HTTPException(status_code=404, detail="Node not found")
+    
+    # Need at least 5 historical embeddings to establish baseline
+    if len(node.embedding_history) < 5:
+        return {
+            "client_id": client_id,
+            "status": "warming_up",
+            "message": f"Need at least 5 samples for baseline, have {len(node.embedding_history)}",
+            "is_anomalous": False,
+            "drift_score": 0.0
+        }
+    
+    # Current embedding
+    current = node.embedding
+    
+    # Historical embeddings (exclude the most recent one)
+    historical = [h['embedding'] for h in node.embedding_history[:-1]]
+    
+    # Compute baseline centroid from history
+    baseline_centroid = VectorMath.centroid(historical)
+    
+    # Compute distances of all historical points to centroid
+    historical_distances = [
+        VectorMath.euclidean_distance(h, baseline_centroid)
+        for h in historical
+    ]
+    
+    # Current distance from baseline
+    current_distance = VectorMath.euclidean_distance(current, baseline_centroid)
+    
+    # Compute z-score (how many std deviations from mean)
+    mean_dist = sum(historical_distances) / len(historical_distances)
+    std_dist = VectorMath.std_dev(historical_distances)
+    
+    if std_dist > 0:
+        drift_score = (current_distance - mean_dist) / std_dist
+    else:
+        drift_score = 0.0
+    
+    # Threshold for anomaly
+    ANOMALY_THRESHOLD = 2.0
+    is_anomalous = drift_score > ANOMALY_THRESHOLD
+    
+    # Compute detailed breakdown if we have weights
+    details = {}
+    if node.weights and 'feature_means' in node.weights:
+        # Compare current trend slopes to baseline
+        feature_means = node.weights.get('feature_means', {})
+        feature_vars = node.weights.get('feature_vars', {})
+        feature_counts = node.weights.get('feature_counts', {})
+        
+        for key in ['slope_memory', 'slope_cpu', 'slope_disk_latency', 
+                   'variance_cpu', 'variance_memory', 'variance_latency']:
+            if key in feature_means:
+                mean = feature_means[key]
+                var = feature_vars.get(key, 0)
+                count = feature_counts.get(key, 1)
+                std = (var / max(count - 1, 1)) ** 0.5 if count > 1 else 0
+                details[key] = {
+                    "baseline_mean": round(mean, 4),
+                    "baseline_std": round(std, 4)
+                }
+    
+    # Interpretation
+    if drift_score < 0.5:
+        interpretation = "Node is behaving normally"
+        status = "healthy"
+    elif drift_score < 1.5:
+        interpretation = "Slight deviation from baseline, monitoring"
+        status = "watching"
+    elif drift_score < 2.0:
+        interpretation = "Moderate deviation, worth investigating"
+        status = "warning"
+    else:
+        interpretation = "Significant anomaly detected! Behavior differs from learned baseline"
+        status = "anomalous"
+    
+    return {
+        "client_id": client_id,
+        "status": status,
+        "is_anomalous": is_anomalous,
+        "drift_score": round(drift_score, 3),
+        "threshold": ANOMALY_THRESHOLD,
+        "interpretation": interpretation,
+        "baseline_samples": len(historical),
+        "current_distance": round(current_distance, 4),
+        "baseline_mean_distance": round(mean_dist, 4),
+        "feature_details": details
+    }
+
+
 @app.get("/compare/{id1}/{id2}", response_model=ComparisonResult)
 async def compare_nodes(id1: str, id2: str):
     """Compare two nodes by their embeddings."""
@@ -386,6 +502,8 @@ async def get_vulnerabilities():
 
 class ReportRequest(BaseModel):
     user_id: str
+    title: str
+    description: str
 
 
 def get_business_context(user_id: str) -> dict:
@@ -616,35 +734,39 @@ async def generate_report(request: ReportRequest):
     Returns the public URL of the generated PDF.
     """
     try:
-        # 1. Fetch business context from database
         business_context = get_business_context(request.user_id)
         if not business_context:
             raise HTTPException(status_code=404, detail="Business context not found for this user")
-        
-        # 2. Get current vulnerabilities from Wazuh
+
         vulnerabilities = wazuh.get_all_vulnerabilities(severity_filter=["Critical", "High", "Medium", "Low"])
-        
-        # 3. Generate AI report using Groq
         report_content = generate_ai_report(business_context, vulnerabilities)
-        
-        # 4. Create PDF
         pdf_bytes = create_pdf_report(report_content, business_context, vulnerabilities)
-        
-        # 5. Upload to R2
         timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
         company_name = business_context.get('name', 'unknown').replace(' ', '_').lower()
-        file_key = f"reports/{company_name}_{timestamp}_{uuid.uuid4().hex[:8]}.pdf"
-        
+        file_key = f"reports/{company_name}_{timestamp}_{uuid.uuid4().hex[:8]}.pdf"        
         s3.upload_object(pdf_bytes, file_key)
-        
-        # 6. Get public URL
         public_url = s3.get_object_url(file_key)
+        ai_summary = report_content[:200] + "..."
+
+        supabase.table("reports").insert({
+            "id": str(uuid.uuid4()),
+            "created_at": datetime.utcnow().isoformat(),
+            "user_id": request.user_id,
+            "title": request.title,
+            "description": request.description,
+            "report_url": public_url,
+            "file_size": len(pdf_bytes),
+            "file_type": "pdf",
+            "vulnerability_count": len(vulnerabilities),
+            "company_name": business_context.get('name', 'Unknown'),
+            "ai_summary": ai_summary
+        }).execute()
         
         return {
             "status": "success",
+            "created_at": datetime.utcnow().isoformat(),
             "message": "Report generated successfully",
             "report_url": public_url,
-            "generated_at": datetime.utcnow().isoformat(),
             "vulnerability_count": len(vulnerabilities),
             "company_name": business_context.get('name', 'Unknown')
         }

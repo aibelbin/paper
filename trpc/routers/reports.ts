@@ -1,63 +1,37 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "@/trpc/init";
 import { TRPCError } from "@trpc/server";
+import { reports } from "@/db/schema";
+import { desc, eq } from "drizzle-orm";
+
+const BASE_URL = 'http://143.110.250.168:8000';
 
 export const reportsRouter = createTRPCRouter({
+  getReports: protectedProcedure.query(async ({ ctx }) => {
+    const data = await ctx.db.select().from(reports).orderBy(desc(reports.createdAt)).where(eq(reports.userId, ctx.auth?.user?.id as string));
+    return data;
+  }),
   generateReport: protectedProcedure
-    .input(
-      z.object({
-        topic: z.string(),
-        details: z.string().optional(),
+    .input(z.object({
+      title: z.string(),
+      description: z.string(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const request = await fetch(`${BASE_URL}/generate/report`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: ctx.auth?.user?.id,
+          title: input.title,
+          description: input.description,
+        }),
       })
-    )
-    .mutation(async ({ input }) => {
-      try {
-        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
-          },
-          body: JSON.stringify({
-            model: "llama-3.3-70b-versatile",
-            messages: [
-              {
-                role: "system",
-                content: `You are a report generation assistant. Create a detailed report based on the provided topic and details.`,
-              },
-              {
-                role: "user",
-                content: `Generate a report on the following topic: ${input.topic}. ${
-                  input.details ? `Here are some additional details to include: ${input.details}` : ""
-                }`,
-              },
-            ],
-            max_tokens: 2000,
-            temperature: 0.7,
-          }),
-        });
-
-        if (!response.ok) {
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Failed to generate report",
-          });
-        }
-
-        const data = await response.json();
-        const report = data.choices[0].message.content;
-
-        return { report };
-      } catch (error) {
-        console.error("Error generating report:", error);
-
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message:
-            error instanceof Error
-              ? error.message
-              : "Failed to generate report",
-        });
+      if (!request.ok) {
+        const error = await request.json();
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: `${error.detail}` });
       }
+      return request.json();
     }),
 });

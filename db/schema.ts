@@ -68,6 +68,26 @@ export const session = pgTable("session", {
 	unique("session_token_unique").on(table.token),
 ]);
 
+export const reports = pgTable("reports", {
+	id: text().primaryKey().notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	userId: text("user_id"),
+	title: text("title").notNull(),
+	description: text("description"),
+	reportUrl: text("report_url"),
+	fileSize: text("file_size"),
+	fileType: text("file_type"),
+	vulnerabilityCount: text("vulnerability_count"),
+	companyName: text("company_name"),
+	aiSummary: text("ai_summary"),
+}, (table) => [
+	foreignKey({
+		columns: [table.userId],
+		foreignColumns: [user.id],
+		name: "reports_user_id_fkey"
+	}),
+]);
+
 export const businessContext = pgTable("business_context", {
 	id: text().primaryKey().notNull(),
 	userId: text("user_id").notNull(),
@@ -97,8 +117,8 @@ export const systems = pgTable("systems", {
 	userId: text("user_id"),
 	name: text(),
 	ipAddress: text("ip_address"),
-	status: text("status"),
-	os: text("os"),
+	status: text(),
+	os: text(),
 }, (table) => [
 	foreignKey({
 		columns: [table.userId],
@@ -106,3 +126,15 @@ export const systems = pgTable("systems", {
 		name: "systems_user_id_fkey"
 	}).onDelete("cascade"),
 ]);
+
+export const systemTelemetry = pgTable("system_telemetry", {
+	id: text().primaryKey().notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	systemId: text("system_id"),
+	hostname: text(),
+	system: text(),
+	cpu: text(),
+	memory: text(),
+	disk: text(),
+	network: text(),
+});
