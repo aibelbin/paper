@@ -2,52 +2,48 @@
 import React from 'react'
 import LetterGlitch from '@/components/LetterGlitch';
 import { authClient } from '@/lib/auth-client';
-import { useRouter } from 'next/navigation';
-import Cookies from "js-cookie";
+import { redirect, useRouter } from 'next/navigation';
+
 export default function page() {
-    const [name, setName] = React.useState('');
-    const [email, setEmail] = React.useState('');
-    const [password, setPassword] = React.useState('');
-    const [confirmPassword, setConfirmPassword] = React.useState('');
-    const [error, setError] = React.useState('');
-    const [loading, setLoading] = React.useState(false);
-    const router = useRouter();
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
-      setError('');
-      
-      if (password !== confirmPassword) {
-        setError('Passwords do not match');
+  const [name, setName] = React.useState('');
+  const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [confirmPassword, setConfirmPassword] = React.useState('');
+  const [error, setError] = React.useState('');
+  const [loading, setLoading] = React.useState(false);
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError('');
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const { data, error } = await authClient.signUp.email({
+        name,
+        email,
+        password,
+      });
+
+      if (error) {
+        setError(error.message || 'Invalid email or password');
+        setLoading(false);
         return;
       }
-      
-      setLoading(true);
-      
-      try {
-          const { data, error } = await authClient.signUp.email({
-            name,
-            email,
-            password,
-          });
-    
-          if (error) {
-            setError(error.message || 'Invalid email or password');
-            setLoading(false);
-            return;
-          }
-    
-          if (data) {
-            Cookies.set("email",email);
-            router.push('/dashboard');
-          }
-        } catch (err) {
-          setError('An unexpected error occurred. Please try again.');
-          setLoading(false);
-        }
+      redirect("/dashboard");
+    } catch (err) {
+      setError('An unexpected error occurred. Please try again.');
+      setLoading(false);
+    }
   }
   return (
     <div className="relative min-h-screen w-full">
       <div className="absolute inset-0 z-0">
+        {/* @ts-ignore */}
         <LetterGlitch
           glitchColors={['#ff00cc', '#00ffee', '#ffff00']}
           glitchSpeed={50}

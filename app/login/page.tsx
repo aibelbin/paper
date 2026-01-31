@@ -39,13 +39,13 @@ export default function LoginPage() {
   return (
     <div className="relative min-h-screen w-full">
       <div className="absolute inset-0 z-0">
+        {/* @ts-ignore */}
         <LetterGlitch
           glitchColors={['#ff00cc', '#00ffee', '#ffff00']}
           glitchSpeed={50}
           centerVignette={true}
           outerVignette={false}
           smooth={true}
-          characters=''
         />
       </div>
       <div className="relative z-10 flex min-h-screen items-center justify-center px-4 sm:px-6 lg:px-8">
