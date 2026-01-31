@@ -121,6 +121,8 @@ cat > "$CONFIG_FILE" << EOF
 EOF
 log_info "Config file created with provided values"
 
+
+
 # Create systemd service file
 log_info "Creating systemd service..."
 cat > "/etc/systemd/system/${SERVICE_NAME}.service" << EOF
@@ -165,6 +167,27 @@ if systemctl is-active --quiet "$SERVICE_NAME"; then
 else
     log_error "Service failed to start. Check logs with: journalctl -u $SERVICE_NAME -f"
     exit 1
+fi
+
+
+# Register host with backend
+log_info "Registering host with backend..."
+# Get public IP
+PUBLIC_IP=$(curl -s ifconfig.me)
+if [ -z "$PUBLIC_IP" ]; then
+    PUBLIC_IP="127.0.0.1"
+fi
+
+# Extract base URL (remove /api/metrics if present)
+BASE_URL="${API_ENDPOINT%/api/metrics}"
+HOST_ADD_URL="${BASE_URL}/host/add"
+
+log_info "Sending registration request to $HOST_ADD_URL"
+# Use curl to hit the GET endpoint
+if curl -fsSL "${HOST_ADD_URL}?system_id=${SYSTEM_ID}&ip_address=${PUBLIC_IP}"; then
+    log_info "Host registered successfully"
+else
+    log_warn "Failed to register host active status. The service will still start."
 fi
 
 echo ""

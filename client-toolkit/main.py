@@ -235,8 +235,9 @@ def collect_metrics() -> ResourceMetrics:
 def send_metrics(metrics: ResourceMetrics) -> bool:
     """Send metrics to the remote API endpoint."""
     try:
+        metrics_url = f"{API_ENDPOINT}/api/metrics"
         response = requests.post(
-            API_ENDPOINT,
+            metrics_url,
             json=metrics,
             timeout=REQUEST_TIMEOUT,
             headers={"Content-Type": "application/json"}
@@ -278,7 +279,6 @@ def main():
         while True:
             try:
                 metrics = collect_metrics()
-                print(metrics)
                 send_metrics(metrics)
                 update_previous_metrics()
             except Exception as e:
